@@ -1080,7 +1080,7 @@ void Campfire::ProcessListenResponse(const char* pstr)
       int nEndMessage = str.find("\"", nStartMessage+1);//There is a bug if you use double quotes ("); I'll fix it later!
       if( nEndMessage == std::string::npos )
          continue;
-      strMessage = str.substr(nStartMessage, nEndMessage-nStartMessage+1);
+      strMessage = str.substr(nStartMessage+1, nEndMessage-nStartMessage-1);//I remove the start and end quote
 
       pthread_mutex_lock( &m_mutexListen );
       m_aListenMessages.push_back(strMessage);
