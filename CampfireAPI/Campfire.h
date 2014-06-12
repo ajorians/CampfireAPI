@@ -129,6 +129,7 @@ public:
 	~Campfire();
 
 	bool Login(const std::string& strHost, const std::string& strAuthCode, bool bUseSSL);
+   bool GetSelf(const std::string& strName, int& nID);
 	int GetRoomCount();
 	bool GetRoomDetails(int nRoomIndex, std::string& strRoomName, int& id);
 	bool JoinRoom(int nRoomIndex);
@@ -171,6 +172,7 @@ protected:
    RestClient* m_pRest;//Used for everything except for listening.
 
    std::string m_strAuthCode;
+   int m_nUserID;
 
    int m_nLastMessageID;
 

@@ -380,7 +380,33 @@ bool Campfire::Login(const std::string& strHost, const std::string& strAuthCode,
    m_strHost = strHost;
    m_bUseSSL= bUseSSL;
 
+   std::string strDummy;
+   int nDummy = 0;
+   GetSelf(strDummy, nDummy);
+
 	return true;
+}
+
+bool Campfire::GetSelf(const std::string& strName, int& nID)
+{
+   std::string strAddress = GetURL(m_strHost, m_bUseSSL);
+   strAddress += "users/me";
+
+   RestClient::response r = m_pRest->get(strAddress);
+
+   std::string& strResponse = r.body;
+   int nStartID = strResponse.find("<id type=\"integer\">");
+   if( nStartID == std::string::npos )
+      return false;
+   nStartID += strlen("<id type=\"integer\">");
+
+   int nEndID = strResponse.find("</id>", nStartID);
+   if( nEndID == std::string::npos )
+      return false;
+
+   std::string strID = strResponse.substr(nStartID, nEndID-nStartID);
+   nID = m_nUserID = atoi(strID.c_str());
+   return true;
 }
 
 int Campfire::GetRoomCount()
@@ -1021,6 +1047,29 @@ void Campfire::ProcessListenResponse(const char* pstr)
       std::string str;
       str = strResponse.substr(nStartPart, nEndPart-nStartPart+1);
 
+      std::string strID;
+      int nStartID = str.find("\"user_id\":");//Note this part here only is for TextMessages; will need to be re-worked to
+      //handle all types!
+      if( nStartID == std::string::npos )
+         continue;
+      nStartID += strlen("\"user_id\":");
+      int nEndID = str.find(",", nStartID+1);
+      if( nEndID == std::string::npos )
+         continue;
+      strID = str.substr(nStartID, nEndID-nStartID);
+      if( strID == "null" )
+         continue;
+      int nID = atoi(strID.c_str());
+
+      if( nID == 0 )
+      {
+         assert(false);
+         continue;
+      }
+
+      if( m_nUserID == nID )//Very important to check this!
+         continue;
+
       std::string strMessage;
       int nStartMessage = str.find("\"body\":");
       if( nStartMessage == std::string::npos )
@@ -1035,12 +1084,15 @@ void Campfire::ProcessListenResponse(const char* pstr)
 
       pthread_mutex_lock( &m_mutexListen );
       m_aListenMessages.push_back(strMessage);
-      if( m_aListenMessages.size() > 1000 )
+      if( m_aListenMessages.size() > 100 )
       {
          assert(false);
+         break;
       }
       pthread_mutex_unlock( &m_mutexListen );
    }
+
+   
 
 }
 
