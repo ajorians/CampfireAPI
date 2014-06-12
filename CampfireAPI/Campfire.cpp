@@ -9,6 +9,8 @@
 #include <string.h>
 #endif
 
+#include <cassert>
+
 #include "RestClientFactory.h"
 #include "RestClient.h"
 
@@ -972,14 +974,7 @@ size_t Campfire::listen_callback(void *ptr, size_t size, size_t nmemb, void *use
       return 0;
 
    const char* pstr = reinterpret_cast<char*>(ptr);
-
-   if( !is_empty_str(pstr) )
-   {
-      pthread_mutex_lock( &pThis->m_mutexListen );
-      pThis->m_aListenMessages.push_back(pstr);
-      pthread_mutex_unlock( &pThis->m_mutexListen );
-      //cout << "Message: " << pstr << endl;
-   }
+   pThis->ProcessListenResponse(pstr);
 
    return (size * nmemb);
 }
@@ -1004,5 +999,48 @@ void Campfire::ListenWorker()
    pClient->SetUserData((void*)this);
    RestClient::response r = pClient->get(strAddress);
    SAFE_DELETE(pClient);//Done with this so no seem to return the callback/userdata
+}
+
+void Campfire::ProcessListenResponse(const char* pstr)
+{
+   if( is_empty_str(pstr) )
+      return;
+
+   std::string strResponse(pstr);
+
+   int nEndPart = 0;
+   while(true)
+   {
+      int nStartPart = strResponse.find("{", nEndPart);
+      if( nStartPart == std::string::npos )
+         break;
+      nEndPart = strResponse.find("}", nStartPart);
+      if( nEndPart == std::string::npos )
+         break;
+
+      std::string str;
+      str = strResponse.substr(nStartPart, nEndPart-nStartPart+1);
+
+      std::string strMessage;
+      int nStartMessage = str.find("\"body\":");
+      if( nStartMessage == std::string::npos )
+         continue;
+      nStartMessage += strlen("\"body\":");
+      if( str[nStartMessage] != '\"' )
+         continue;
+      int nEndMessage = str.find("\"", nStartMessage+1);//There is a bug if you use double quotes ("); I'll fix it later!
+      if( nEndMessage == std::string::npos )
+         continue;
+      strMessage = str.substr(nStartMessage, nEndMessage-nStartMessage+1);
+
+      pthread_mutex_lock( &m_mutexListen );
+      m_aListenMessages.push_back(strMessage);
+      if( m_aListenMessages.size() > 1000 )
+      {
+         assert(false);
+      }
+      pthread_mutex_unlock( &m_mutexListen );
+   }
+
 }
 

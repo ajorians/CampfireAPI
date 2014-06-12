@@ -159,6 +159,7 @@ protected:
 
    static void* ListenThread(void* ptr);
    void ListenWorker();
+   void ProcessListenResponse(const char* pstr);
 
 protected:
    pthread_t m_threadListen;
