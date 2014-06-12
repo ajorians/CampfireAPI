@@ -16,6 +16,10 @@
 
 using namespace std;
 
+#ifndef SAFE_DELETE
+#define SAFE_DELETE(x) { delete (x); (x) = NULL; }
+#endif
+
 CAMPFIRE_EXTERN int CampfireCreate(CampfireAPI* api)
 {
 	*api = new Campfire;
@@ -98,12 +102,28 @@ CAMPFIRE_EXTERN int CampfireUploadFile(CampfireAPI api, const char* pstrFilePath
 	return pCampfire->UploadFile(strFilePath) ? 1 : 0;
 }
 
-CAMPFIRE_EXTERN int CampfireListen(CampfireAPI api, int& nCount)
+CAMPFIRE_EXTERN int CampfireListen(CampfireAPI api)
 {
 	Campfire* pCampfire = (Campfire*)api;
 	bool bRet = pCampfire->Listen();
-	nCount = pCampfire->GetMessageCount();
 	return bRet ? 1 : 0;
+}
+
+CAMPFIRE_EXTERN int CampfireGetListenMessage(CampfireAPI api, char* pstrMessage, int& nSizeOfMessage)
+{
+   Campfire* pCampfire = (Campfire*)api;
+   std::string strListenMessage;
+   bool bRet = pCampfire->GetListenMessage(strListenMessage);
+   if( nSizeOfMessage > 0 )
+   {
+      memcpy(pstrMessage, strListenMessage.c_str(), min(nSizeOfMessage, (int)strListenMessage.size()) + 1);
+   }
+   else
+   {
+      nSizeOfMessage = strListenMessage.size();
+   }
+
+   return bRet ? 1 : 0;
 }
 
 CAMPFIRE_EXTERN int CampfireGetMessagesCount(CampfireAPI api, int& nCount)
@@ -273,18 +293,36 @@ void Messages::PutMessageOnto(int nIndex, int& nType, std::string& strPerson, st
 }
 
 Campfire::Campfire()
-: m_nLastMessageID(0)
+: 
+#ifdef WIN32
+   m_mutexListen(PTHREAD_MUTEX_INITIALIZER),
+#endif
+   m_bExit(false), m_nLastMessageID(0)
 {
+#ifndef WIN32
+   pthread_mutex_init(&m_mutexListen, NULL);
+#endif
+   m_threadListen = pthread_self();
 	curl_global_init(CURL_GLOBAL_ALL);
 }
 
 Campfire::~Campfire()
 {
+   pthread_mutex_lock( &m_mutexListen );
+   m_bExit = true;
+   pthread_mutex_unlock( &m_mutexListen );
+
+   pthread_join( m_threadListen, NULL);
+
+   SAFE_DELETE(m_pRest);
+
 	curl_global_cleanup();
 }
 
 bool Campfire::Login(const std::string& strHost, const std::string& strAuthCode, bool bUseSSL)
 {
+   m_strAuthCode = strAuthCode;
+
    RestClientFactory factory;
    m_pRest = factory.SetUsernamePassword(strAuthCode, "x").SetVerbosity(false).CreateRestClient();
 
@@ -543,31 +581,46 @@ bool Campfire::UploadFile(const std::string& strFilePath)
 	return false;
 }
 
-bool Campfire::Listen()
-{
-   std::string strAddress = GetStreamingURL(m_nRoomNum, m_bUseSSL) + "/live.json";
-
-   RestClient::response r = m_pRest->get(strAddress);
-   //ParseListenResponse(r.body);
-
-   return true;
-}
-
 bool Campfire::ClearMessages()
 {
    m_Messages.Clear();
-	return true;
+   return true;
 }
 
 int Campfire::GetMessageCount()
 {
-	return m_Messages.Count();
+   return m_Messages.Count();
 }
 
 bool Campfire::GetMessage(int nIndex, int& nType, std::string& strPerson, std::string& strMessage)
 {
    m_Messages.PutMessageOnto(nIndex, nType, strPerson, strMessage);
-	return true;
+   return true;
+}
+
+bool Campfire::Listen()
+{
+   //TODO: Check if already started thread!
+
+   int iRet;
+   iRet = pthread_create( &m_threadListen, NULL, Campfire::ListenThread, (void*)this);
+
+   return true;
+}
+
+bool Campfire::GetListenMessage(std::string& strMessage)
+{
+   bool bRet = false;
+   pthread_mutex_lock( &m_mutexListen );
+   if( m_aListenMessages.size() > 0 )
+   {
+      strMessage = m_aListenMessages[0];
+      m_aListenMessages.erase(m_aListenMessages.begin());
+      bRet = true;
+   }
+   pthread_mutex_unlock( &m_mutexListen );
+
+   return bRet;
 }
 
 bool Campfire::Leave()
@@ -634,7 +687,7 @@ bool Campfire::SayPaste(const std::string& strMessage, MessageType eType, int& n
       return false;
 
    std::string strIDLine = r.body.substr(nStartID + strlen("<id type=\"integer\">"), nEndID-nStartID-strlen("<id type=\"integer\">"));
-   nMessageID = std::stoi(strIDLine);
+   nMessageID = atoi(strIDLine.c_str());
 
 	return true;
 }
@@ -679,7 +732,7 @@ std::string Campfire::GetStreamingURL(int nRoomNum, bool bUseSSL)
 
    strReturn += "streaming.campfirenow.com/room/";
    strReturn += IntToString(nRoomNum);
-   strReturn += "/live.xml";
+   strReturn += "/live.json";
 
    return strReturn;
 }
@@ -903,4 +956,53 @@ bool Campfire::ParseListenResponse(const std::string& strListenResponse)
 	return true;
 }
 
+int is_empty_str(const char *s) {
+   while (*s != '\0') {
+      if (!isspace(*s))
+         return 0;
+      s++;
+   }
+   return 1;
+}
+
+size_t Campfire::listen_callback(void *ptr, size_t size, size_t nmemb, void *userdata)
+{
+   Campfire* pThis = (Campfire*)userdata;
+   if( pThis->m_bExit )
+      return 0;
+
+   const char* pstr = reinterpret_cast<char*>(ptr);
+
+   if( !is_empty_str(pstr) )
+   {
+      pthread_mutex_lock( &pThis->m_mutexListen );
+      pThis->m_aListenMessages.push_back(pstr);
+      pthread_mutex_unlock( &pThis->m_mutexListen );
+      //cout << "Message: " << pstr << endl;
+   }
+
+   return (size * nmemb);
+}
+
+void* Campfire::ListenThread(void* ptr)
+{
+   Campfire* pThis = (Campfire*)ptr;
+   pThis->ListenWorker();
+
+   return NULL;
+}
+
+void Campfire::ListenWorker()
+{
+   void******* m_pRest = NULL;//This is a thread; so don't use m_pRest!
+
+   std::string strAddress = GetStreamingURL(m_nRoomNum, m_bUseSSL);
+
+   RestClientFactory factory;
+   RestClient* pClient = factory.SetUsernamePassword(m_strAuthCode, "x").SetVerbosity(false).CreateRestClient();
+   pClient->SetCallback(Campfire::listen_callback);
+   pClient->SetUserData((void*)this);
+   RestClient::response r = pClient->get(strAddress);
+   SAFE_DELETE(pClient);//Done with this so no seem to return the callback/userdata
+}
 

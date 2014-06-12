@@ -16,9 +16,10 @@
 using namespace std;
 
 RestClient::RestClient()
-: m_bVerbosity(false)
+: m_bVerbosity(false), m_nTimeout(0), m_pUserData(NULL)
 {
    m_strUserAgent = "ajrestclient/0.0.1";
+   m_WriteCallback = RestClient::write_callback;
 }
 
 RestClient& RestClient::SetVerbosity(bool bEnable)
@@ -32,6 +33,27 @@ RestClient& RestClient::SetUsernamePassword(std::string& strUsername, std::strin
 {
    m_strUsername = strUsername;
    m_strPassword = strPassword;
+
+   return *this;
+}
+
+RestClient& RestClient::SetTimeout(int nSeconds)
+{
+   m_nTimeout = nSeconds;
+
+   return *this;
+}
+
+RestClient& RestClient::SetCallback(WriteCallback callback /*= RestClient::write_callback*/)
+{
+   m_WriteCallback = callback;
+
+   return *this;
+}
+
+RestClient& RestClient::SetUserData(void* pUserData /*= NULL*/)
+{
+   m_pUserData = pUserData;
 
    return *this;
 }
@@ -93,13 +115,27 @@ RestClient::response RestClient::get(const std::string& url, const std::string& 
        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
 
     /** set callback function */
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, RestClient::write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, m_WriteCallback);
+
     /** set data object to pass to callback function */
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ret);
-    
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, m_pUserData ? m_pUserData : &ret);
+
+    if( m_nTimeout > 0 )
+    {
+      curl_easy_setopt(curl, CURLOPT_TIMEOUT, m_nTimeout);
+    }
+    else
+    {
+       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 0);
+    }
+
     /** perform the actual query */
     res = curl_easy_perform(curl);
-    if (res != 0)
+    if( res == CURLE_OPERATION_TIMEDOUT )
+    {
+
+    }
+    else if (res != 0)
     {
       ret.body = "Failed to query.";
       ret.code = -1;
@@ -151,9 +187,9 @@ RestClient::response RestClient::post(const std::string& url,
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data.size());
     /** set callback function */
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, RestClient::write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, m_WriteCallback);
     /** set data object to pass to callback function */
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ret);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, m_pUserData ? m_pUserData : &ret);
     /** set content-type header */
     curl_slist* header = NULL;
     header = curl_slist_append(header, ctype_header.c_str());
@@ -215,9 +251,9 @@ RestClient::response RestClient::put(const std::string& url,
     /** set data object to pass to callback function */
     curl_easy_setopt(curl, CURLOPT_READDATA, &up_obj);
     /** set callback function */
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, RestClient::write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, m_WriteCallback);
     /** set data object to pass to callback function */
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ret);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, m_pUserData ? m_pUserData : &ret);
     /** set data size */
     curl_easy_setopt(curl, CURLOPT_INFILESIZE,
                      static_cast<long>(up_obj.length));
@@ -270,9 +306,9 @@ RestClient::response RestClient::del(const std::string& url)
     /** set HTTP DELETE METHOD */
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, http_delete);
     /** set callback function */
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, RestClient::write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, m_WriteCallback);
     /** set data object to pass to callback function */
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ret);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, m_pUserData ? m_pUserData : &ret);
     /** perform the actual query */
     res = curl_easy_perform(curl);
     if (res != 0)

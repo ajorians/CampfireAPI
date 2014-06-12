@@ -2,6 +2,8 @@ PROJECT(CampfireAPI)
 
 cmake_minimum_required(VERSION 2.6)
 
+IF(WIN32)
 ADD_SUBDIRECTORY(curl-7.19.2)
+ENDIF(WIN32)
 ADD_SUBDIRECTORY(CampfireAPI)
 ADD_SUBDIRECTORY(SimpleCampfireConsole)

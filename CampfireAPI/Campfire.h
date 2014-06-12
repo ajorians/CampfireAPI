@@ -1,6 +1,7 @@
 #ifndef CAMPFIREAPI_CAMPFIRE_H
 #define CAMPFIREAPI_CAMPFIRE_H
 
+#include <pthread.h>
 #include <vector>
 #include <string>
 #include <curl/curl.h>
@@ -135,11 +136,12 @@ public:
 	bool Paste(const std::string& strMessage, int& nMessageID);
    bool PlaySound(Sounds eSound);
 	bool UploadFile(const std::string& strFilePath);
+   bool ClearMessages();
+   int GetMessageCount();
+   bool GetMessage(int nIndex, int& nType, std::string& strPerson, std::string& strMessage);
 
 	bool Listen();
-	bool ClearMessages();
-	int GetMessageCount();
-	bool GetMessage(int nIndex, int& nType, std::string& strPerson, std::string& strMessage);
+	bool GetListenMessage(std::string& strMessage);
 
 	bool Leave();
 	bool SetRoomTopic(const std::string& strTopic);
@@ -152,17 +154,29 @@ protected:
    std::string GetStreamingURL(int nRoomNum, bool bUseSSL);
 	bool ParseListenResponse(const std::string& strListenResponse);
 
+   static size_t listen_callback(void *ptr, size_t size, size_t nmemb,
+      void *userdata);
+
+   static void* ListenThread(void* ptr);
+   void ListenWorker();
+
 protected:
-   RestClient* m_pRest;
+   pthread_t m_threadListen;
+   pthread_mutex_t m_mutexListen;
+   std::vector<std::string> m_aListenMessages;
+
+   bool m_bExit;
+
+   RestClient* m_pRest;//Used for everything except for listening.
+
+   std::string m_strAuthCode;
 
    int m_nLastMessageID;
 
    Messages m_Messages;
    std::vector<RoomEntry> m_RoomList;
-   //std::vector<ChatEntry> m_ChatEvents;//Used by WikiReport
 
 	std::string m_strHost;
-	//std::string m_strRoomUrl;
    int m_nRoomNum;
 	bool m_bUseSSL;
 };

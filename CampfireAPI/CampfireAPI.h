@@ -59,7 +59,8 @@ typedef int (*CampfirePlaySoundFunc)(CampfireAPI api, int nSound);
 typedef int (*CampfireUploadFileFunc)(CampfireAPI api, const char* pstrFilePath);
 
 typedef int (*CampfirePingFunc)(CampfireAPI api);
-typedef int (*CampfireListenFunc)(CampfireAPI api, int& nCount);
+typedef int (*CampfireListenFunc)(CampfireAPI api);
+typedef int (*CampfireGetListenMessageFunc)(CampfireAPI api, char* pstrMessage, int& nSizeOfMessage);
 typedef int (*CampfireGetMessagesCountFunc)(CampfireAPI api, int& nCount);
 typedef int (*CampfireMessageFunc)(CampfireAPI api, int nIndex, int& nType, char* pstrMessage, int& nSizeOfMessage, int& nUserID);
 typedef int (*CampfireMessageClearFunc)(CampfireAPI api);
@@ -80,7 +81,8 @@ CAMPFIRE_EXTERN int CampfirePaste(CampfireAPI api, const char* pstrMessage, int&
 CAMPFIRE_EXTERN int CampfirePlaySound(CampfireAPI api, int nSound);
 CAMPFIRE_EXTERN int CampfireUploadFile(CampfireAPI api, const char* pstrFilePath);
 
-CAMPFIRE_EXTERN int CampfireListen(CampfireAPI api, int& nCount);
+CAMPFIRE_EXTERN int CampfireListen(CampfireAPI api);
+CAMPFIRE_EXTERN int CampfireGetListenMessage(CampfireAPI api, char* pstrMessage, int& nSizeOfMessage);
 CAMPFIRE_EXTERN int CampfireGetMessagesCount(CampfireAPI api, int& nCount);
 CAMPFIRE_EXTERN int CampfireMessage(CampfireAPI api, int nIndex, int& nType, char* pstrMessage, int& nSizeOfMessage, int& nUserID);
 CAMPFIRE_EXTERN int CampfireMessageClear(CampfireAPI api);

@@ -194,51 +194,27 @@ int main(int argc, char *argv[])
       if( !Listen )
          return 0;
 
+      CampfireGetListenMessageFunc GetListenMessage = (CampfireGetListenMessageFunc)library.Resolve("CampfireGetListenMessage");
+      if( !GetListenMessage )
+         return 0;
+
+      Listen(pCampfire);
+
+      char strBuffer[1024*100];
       while( true )
       {
-         int nCount = 0;
-         Listen(pCampfire, nCount);
+         int nSizeOfMessage = 1024*100;
+         bool bHasMessage = GetListenMessage(pCampfire, strBuffer, nSizeOfMessage) == 1;
 
-         if( nCount > 0 )
+         if( bHasMessage )
          {
-            for(int i=0; i<nCount; i++)
-            {
-               CampfireMessageFunc GetMessage = (CampfireMessageFunc)library.Resolve("CampfireMessage");
-               if( !GetMessage )
-                  return 0;
-
-               int nSizeOfMessage = 0;
-               int nType = 0;
-               int nUserID = 0;
-
-               bool bOK = GetMessage(pCampfire, i, nType, NULL, nSizeOfMessage, nUserID) == 1;
-               if( !bOK )
-                  continue;
-
-               char * pstrMessage;
-               pstrMessage = new char[nSizeOfMessage + 1];
-
-               GetMessage(pCampfire, i, nType, pstrMessage, nSizeOfMessage, nUserID);
-
-               string strMessage(pstrMessage);
-
-               delete[] pstrMessage;
-
-               if( nType == MESSAGE_TYPE_ENTERLEAVE || nType == MESSAGE_TYPE_TIMESTAMP )
-                  cout << "ACTIVITY: ";
-               cout << nUserID << ": " << strMessage << endl;
-            }
-            CampfireMessageClearFunc ClearMessages = (CampfireMessageClearFunc)library.Resolve("CampfireMessageClear");
-            if( !ClearMessages )
-               return 0;
-
-            ClearMessages(pCampfire);
+            cout << "Message: " << strBuffer << endl;
          }
 
 #ifdef _WIN32
-         Sleep(2000);
+         Sleep(200);
 #else
-		usleep(2000*1000);
+         usleep(200*1000);
 #endif
       }
    }

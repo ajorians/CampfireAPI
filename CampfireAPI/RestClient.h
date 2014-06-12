@@ -13,12 +13,17 @@
 #include <string>
 #include <cstdlib>
 
+typedef size_t (*WriteCallback)(void *ptr, size_t size, size_t nmemb, void *userdata);
+
 class RestClient
 {
 public:
    RestClient();
    RestClient& SetVerbosity(bool bEnable);
    RestClient& SetUsernamePassword(std::string& strUsername, std::string& strPassword);
+   RestClient& SetTimeout(int nSeconds);
+   RestClient& SetCallback(WriteCallback callback = RestClient::write_callback);
+   RestClient& SetUserData(void* pUserData = NULL);
    /**
    * public data definitions
    */
@@ -61,6 +66,9 @@ protected:
    std::string m_strPassword;
    std::string m_strUserAgent;
    bool m_bVerbosity;
+   int m_nTimeout;
+   WriteCallback m_WriteCallback;
+   void* m_pUserData;
 };
 
 #endif  // INCLUDE_RESTCLIENT_H_
