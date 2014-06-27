@@ -22,6 +22,10 @@ using namespace std;
 #define SAFE_DELETE(x) { delete (x); (x) = NULL; }
 #endif
 
+#ifndef ARR_SIZE
+#define ARR_SIZE(x) sizeof(x)/sizeof(x[0])
+#endif
+
 CAMPFIRE_EXTERN int CampfireCreate(CampfireAPI* api)
 {
 	*api = new Campfire;
@@ -463,146 +467,73 @@ bool Campfire::Paste(const std::string& strMessage, int& nMessageID)
 	return SayPaste(strMessage, PasteMessage, nMessageID);
 }
 
+struct SoundTagPair
+{
+   Sounds eSound;
+   const char* pstrData;
+} g_SoundTagPairs[] = 
+{
+   { _56k,           "56k"           },
+   { Bell,           "bell"          },
+   { Bezos,          "bezos"         },
+   { Bueller,        "bueller"       },
+   { Clowntown,      "clowntown"     },
+   { Cottoneyejoe,   "cottoneyejoe"  },
+   { Crickets,       "crickets"      },
+   { Dadgummit,      "dadgummit"     },
+   { Dangerzone,     "dangerzone"    },
+   { Danielsan,      "danielsan"     },
+   { Deeper,         "deeper"        },
+   { Drama,          "drama"         },
+   { Greatjob,       "greatjob"      },
+   { Greyjoy,        "greatjoy"      },
+   { Guarantee,      "guarantee"     },
+   { Heygirl,        "heygirl"       },
+   { Horn,           "horn"          },
+   { Horror,         "horror"        },
+   { Inconceivable,  "inconceivable" },
+   { Live,           "live"          },
+   { Loggins,        "loggins"       },
+   { Makeitso,       "makeitso"      },
+   { Noooo,          "noooo"         },
+   { Nyan,           "nyan"          },
+   { Ohmy,           "ohmy"          },
+   { Ohyeah,         "ohyeah"        },
+   { Pushit,         "pushit"        },
+   { Rimshot,        "rimshot"       },
+   { Rollout,        "rollout"       },
+   { Rumble,         "rumble"        },
+   { Sax,            "sax"           },
+   { Secret,         "secret"        },
+   { Sexyback,       "sexyback"      },
+   { Story,          "story"         },
+   { Tada,           "tada"          },
+   { Tmyk,           "tmyk"          },
+   { Trololo,        "trololo"       },
+   { Trombone,       "trombone"      },
+   { Unix,           "unix"          },
+   { Vuvuzla,        "vuvuzla"       },
+   { What,           "what"          },
+   { Whoomp,         "whoomp"        },
+   { Yeah,           "yeah"          },
+   { Yodel,          "yodel"         }
+};
+
 bool Campfire::PlaySound(Sounds eSound)
 {
 	string strData;
-	switch( eSound )
+   bool bFoundMatch = false;
+   for(int i=0; i<ARR_SIZE(g_SoundTagPairs); i++)
    {
-   default:
-      //RASSERT(false);
-   case Crickets:
-      strData += "crickets";
-      break;
-   case Rimshot:
-      strData += "rimshot";
-      break;
-   case Trombone:
-      strData += "trombone";
-      break;
-   case Whoomp:
-      strData += "whoomp";
-      break;
-   case Loggins:
-      strData += "loggins";
-      break;
-   case Bueller:
-      strData += "bueller";
-      break;
-   case Yodel:
-      strData += "yodel";
-      break;
-   case Tada:
-      strData += "tada";
-      break;
-   case Horror:
-      strData += "horror";
-      break;
-   case Tmyk:
-      strData += "tmyk";
-      break;
-   case Ohyeah:
-      strData += "ohyeah";
-      break;
-   case Horn:
-      strData += "horn";
-      break;
-   case Noooo:
-      strData += "noooo";
-      break;
-   case Live:
-      strData += "live";
-      break;
-   case Heygirl:
-      strData += "heygirl";
-      break;
-   case Ohmy:
-      strData += "ohmy";
-      break;
-   case Greatjob:
-      strData += "greatjob";
-      break;
-   case Yeah:
-      strData += "yeah";
-      break;
-   case What:
-      strData += "what";
-      break;
-   case Inconceivable:
-      strData += "inconceivable";
-      break;
-   case Dangerzone:
-      strData += "dangerzone";
-      break;
-   case Secret:
-      strData += "secret";
-      break;
-   case Pushit:
-      strData += "pushit";
-      break;
-   case Drama:
-      strData += "drama";
-      break;
-   case Vuvuzla:
-      strData += "vuvuzela";
-      break;
-   case Sax:
-      strData += "sax";
-      break;
-   case _56k:
-      strData += "56k";
-      break;
-   case Trololo:
-      strData += "trololo";
-      break;
-   case Makeitso:
-      strData += "makeitso";
-      break;
-   case Bell:
-      strData += "bell";
-      break;
-   case Clowntown:
-      strData += "clowntown";
-      break;
-   case Bezos:
-      strData += "bezos";
-      break;
-   case Rollout:
-      strData += "rollout";
-      break;
-   case Sexyback:
-      strData += "sexyback";
-      break;
-   case Dadgummit:
-      strData += "dadgummit";
-      break;
-   case Danielsan:
-      strData += "danielsan";
-      break;
-   case Greyjoy:
-      strData += "greyjoy";
-      break;
-   case Cottoneyejoe:
-      strData += "cottoneyejoe";
-      break;
-   case Guarantee:
-      strData += "guarantee";
-      break;
-   case Nyan:
-      strData += "nyan";
-      break;
-   case Deeper:
-      strData += "deeper";
-      break;
-   case Unix:
-      strData += "unix";
-      break;
-   case Story:
-      strData += "story";
-      break;
-   case Rumble:
-      strData += "rumble";
-      break;
+      if( g_SoundTagPairs[i].eSound == eSound )
+      {
+         strData += g_SoundTagPairs[i].pstrData;
+         bFoundMatch = true;
+      }
    }
+   if( !bFoundMatch )
+      return false;
+
    int nMessageID;
    return SayPaste(strData, SoundMessage, nMessageID);
 }
