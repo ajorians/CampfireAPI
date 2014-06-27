@@ -995,6 +995,15 @@ void Campfire::ListenWorker()
       RestClient::response r = pClient->get(strAddress);
       cout << "Finished Listening!!!" << r.code << endl;
       SAFE_DELETE(pClient);//Done with this so no need to revert the callback/userdata
+
+      if( !m_bExit )
+      {
+#ifdef _WIN32
+         Sleep(200);
+#else
+         usleep(200*1000);
+#endif
+      }
    }
 }
 
