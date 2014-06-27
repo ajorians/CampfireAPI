@@ -90,10 +90,10 @@ enum Sounds
    Crickets = 1,
    Rimshot,
    Trombone,
-   whoomp,
+   Whoomp,
    Loggins,
    Bueller,
-   Yoel,
+   Yodel,
    Tada,
    Horror,
    Tmyk,
@@ -113,7 +113,24 @@ enum Sounds
    Drama,
    Vuvuzla,
    Sax,
-   _56k
+   _56k,
+   Bezos,
+   Rollout,
+   Bell,
+   Sexyback,
+   Dadgummit,
+   Danielsan,
+   Greyjoy,
+   Cottoneyejoe,
+   Makeitso,
+   Guarantee,
+   Nyan,
+   Deeper,
+   Unix,
+   Trololo,
+   Clowntown,
+   Story,
+   Rumble
 };
 
 class Campfire

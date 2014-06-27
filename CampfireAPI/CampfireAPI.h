@@ -46,6 +46,19 @@ typedef void*	CampfireAPI;
 #define SOUND_BELL               0x1F
 #define SOUND_CLOWNTOWN          0x20
 #define SOUND_BEZOS              0x21
+#define SOUNDS_ROLLOUT           0x22
+#define SOUNDS_BELL              0x23
+#define SOUNDS_SEXYBACK          0x24
+#define SOUNDS_DADGUMMIT         0x25
+#define SOUNDS_DANIELSAN         0x26
+#define SOUNDS_GREYJOY           0x27
+#define SOUNDS_COTTONEYEJOE      0x28
+#define SOUNDS_GUARANTEE         0x29
+#define SOUNDS_NYAN              0x2A
+#define SOUNDS_DEEPER            0x2B
+#define SOUNDS_UNIX              0x2C
+#define SOUNDS_STORY             0x2D
+#define SOUNDS_RUMBLE            0x2E
 
 typedef int (*CampfireCreateFunc)(CampfireAPI* api);
 typedef int (*CampfireFreeFunc)(CampfireAPI* api);

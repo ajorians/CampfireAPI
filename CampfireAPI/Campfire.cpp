@@ -479,92 +479,128 @@ bool Campfire::PlaySound(Sounds eSound)
    case Trombone:
       strData += "trombone";
       break;
-   case SOUND_WHOOMP:
+   case Whoomp:
       strData += "whoomp";
       break;
-   case SOUND_LOGGINS:
+   case Loggins:
       strData += "loggins";
       break;
-   case SOUND_BUELLER:
+   case Bueller:
       strData += "bueller";
       break;
-   case SOUND_YODEL:
+   case Yodel:
       strData += "yodel";
       break;
-   case SOUND_TADA:
+   case Tada:
       strData += "tada";
       break;
-   case SOUND_HORROR:
+   case Horror:
       strData += "horror";
       break;
-   case SOUND_TMYK:
+   case Tmyk:
       strData += "tmyk";
       break;
-   case SOUND_OHYEAH:
+   case Ohyeah:
       strData += "ohyeah";
       break;
-   case SOUND_HORN:
+   case Horn:
       strData += "horn";
       break;
-   case SOUND_NOOOO:
+   case Noooo:
       strData += "noooo";
       break;
-   case SOUND_LIVE:
+   case Live:
       strData += "live";
       break;
-   case SOUND_HEYGIRL:
+   case Heygirl:
       strData += "heygirl";
       break;
-   case SOUND_OHMY:
+   case Ohmy:
       strData += "ohmy";
       break;
-   case SOUND_GREATJOB:
+   case Greatjob:
       strData += "greatjob";
       break;
-   case SOUND_YEAH:
+   case Yeah:
       strData += "yeah";
       break;
-   case SOUND_WHAT:
+   case What:
       strData += "what";
       break;
-   case SOUND_INCONCEIVABLE:
+   case Inconceivable:
       strData += "inconceivable";
       break;
-   case SOUND_DANGERZONE:
+   case Dangerzone:
       strData += "dangerzone";
       break;
-   case SOUND_SECRET:
+   case Secret:
       strData += "secret";
       break;
-   case SOUND_PUSHIT:
+   case Pushit:
       strData += "pushit";
       break;
-   case SOUND_DRAMA:
+   case Drama:
       strData += "drama";
       break;
-   case SOUND_VUVUZELA:
+   case Vuvuzla:
       strData += "vuvuzela";
       break;
-   case SOUND_SAX:
+   case Sax:
       strData += "sax";
       break;
-   case SOUND_56K:
+   case _56k:
       strData += "56k";
       break;
-   case SOUND_TROLOLO:
+   case Trololo:
       strData += "trololo";
       break;
-   case SOUND_MAKEITSO:
+   case Makeitso:
       strData += "makeitso";
       break;
-   case SOUND_BELL:
+   case Bell:
       strData += "bell";
       break;
-   case SOUND_CLOWNTOWN:
+   case Clowntown:
       strData += "clowntown";
       break;
-   case SOUND_BEZOS:
+   case Bezos:
       strData += "bezos";
+      break;
+   case Rollout:
+      strData += "rollout";
+      break;
+   case Sexyback:
+      strData += "sexyback";
+      break;
+   case Dadgummit:
+      strData += "dadgummit";
+      break;
+   case Danielsan:
+      strData += "danielsan";
+      break;
+   case Greyjoy:
+      strData += "greyjoy";
+      break;
+   case Cottoneyejoe:
+      strData += "cottoneyejoe";
+      break;
+   case Guarantee:
+      strData += "guarantee";
+      break;
+   case Nyan:
+      strData += "nyan";
+      break;
+   case Deeper:
+      strData += "deeper";
+      break;
+   case Unix:
+      strData += "unix";
+      break;
+   case Story:
+      strData += "story";
+      break;
+   case Rumble:
+      strData += "rumble";
       break;
    }
    int nMessageID;
