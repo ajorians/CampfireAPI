@@ -167,7 +167,7 @@ protected:
    pthread_mutex_t m_mutexListen;
    std::vector<std::string> m_aListenMessages;
 
-   bool m_bExit;
+   volatile bool m_bExit;
 
    RestClient* m_pRest;//Used for everything except for listening.
 

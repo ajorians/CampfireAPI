@@ -1019,12 +1019,16 @@ void Campfire::ListenWorker()
 
    std::string strAddress = GetStreamingURL(m_nRoomNum, m_bUseSSL);
 
-   RestClientFactory factory;
-   RestClient* pClient = factory.SetUsernamePassword(m_strAuthCode, "x").SetVerbosity(false).CreateRestClient();
-   pClient->SetCallback(Campfire::listen_callback);
-   pClient->SetUserData((void*)this);
-   RestClient::response r = pClient->get(strAddress);
-   SAFE_DELETE(pClient);//Done with this so no seem to return the callback/userdata
+   while( !m_bExit )
+   {
+      RestClientFactory factory;
+      RestClient* pClient = factory.SetUsernamePassword(m_strAuthCode, "x").SetVerbosity(false).CreateRestClient();
+      pClient->SetCallback(Campfire::listen_callback);
+      pClient->SetUserData((void*)this);
+      RestClient::response r = pClient->get(strAddress);
+      cout << "Finished Listening!!!" << r.code << endl;
+      SAFE_DELETE(pClient);//Done with this so no need to revert the callback/userdata
+   }
 }
 
 void Campfire::ProcessListenResponse(const char* pstr)
